@@ -29,17 +29,21 @@ private:
     void setAsCurrentImage(QImage *image);
 
 public:
+    // Blur
     QImage* blur(const QImage* image, const int kernel[], const float kernelParameter, const int kernelRadius);
     QImage* meanBlur(const QImage* image);
     QImage* gaussianBlur3x3(const QImage* image);
     QImage* gaussianBlur5x5(const QImage* image);
     QImage* medianFilter(const QImage* image);
     QImage* variationFilter(const QImage* image);
+    // Histogram
     void computeHistogram(const QImage* image,std::vector<int> *redHistogram,std::vector<int> *greenHistogram,std::vector<int> *blueHistogram);
     static void fillHistogram(const QImage image,const int x_start,const int x_end, const int height, vector< vector<int> *> * histograms, const int i);
 
-   // static void fillHistogram(const QImage image,const int x_start,const int x_end, const int height, std::vector<int> *redHistogram,std::vector<int> *greenHistogram,std::vector<int> *blueHistogram, const int i);
-
+    //Edge detection
+    QImage* gradientFilter(const QImage* image);
+    QImage* horizontalSobelGradientFilter(const QImage* image);
+    QImage* verticalSobelGradientFilter(const QImage* image);
 private:
     QImage* currentImage;
 

@@ -433,6 +433,52 @@ void ImageViewer::drawBarChart()
     chartView->show();
 }
 
+void ImageViewer::gradientFilter()
+{
+ QImage* result = imageProcessor->gradientFilter(&image);
+ if(result != nullptr)
+ {
+     setImage(*result);
+     QMessageBox::warning(this, tr("Warning"),tr("Filter applied"));
+ }
+ else
+ {
+     QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+ }
+
+}
+
+
+void ImageViewer::horizontalGradientFilter()
+{
+    QImage* result = imageProcessor->horizontalSobelGradientFilter(&image);
+    if(result != nullptr)
+    {
+        setImage(*result);
+        QMessageBox::warning(this, tr("Warning"),tr("Filter applied"));
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+    }
+
+}
+
+void ImageViewer::verticalGradientFilter()
+{
+    QImage* result = imageProcessor->verticalSobelGradientFilter(&image);
+    if(result != nullptr)
+    {
+        setImage(*result);
+        QMessageBox::warning(this, tr("Warning"),tr("Filter applied"));
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+    }
+
+}
+
 void ImageViewer::about()
 {
     QMessageBox::about(this, tr("About Image Viewer"),
@@ -508,6 +554,11 @@ void ImageViewer::createActions()
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
     imageMenu->addAction(tr("&Histogram"), this, &ImageViewer::showHistogram);
+
+    QMenu *edgeDetectionMenu = menuBar()->addMenu(tr("&Edge Detection"));
+    edgeDetectionMenu->addAction(tr("&Gradient"), this, &ImageViewer::gradientFilter);
+    edgeDetectionMenu->addAction(tr("&HorizontalGradient"), this, &ImageViewer::horizontalGradientFilter);
+    edgeDetectionMenu->addAction(tr("&VerticalGradient"), this, &ImageViewer::verticalGradientFilter);
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
 

@@ -44,12 +44,18 @@ private slots:
     void zoomOut();
     void normalSize();
     void fitToWindow();
+    // Blur
     void meanBlur();
     void gaussianBlur3x3();
     void gaussianBlur5x5();
     void medianFilter();
     void variationFilter();
+    // Histogram
     void showHistogram();
+    // Edge detection
+    void gradientFilter();
+    void horizontalGradientFilter();
+    void verticalGradientFilter();
     void about();
 
 private:
