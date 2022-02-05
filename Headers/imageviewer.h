@@ -44,6 +44,8 @@ private slots:
     void zoomOut();
     void normalSize();
     void fitToWindow();
+    //
+    void grayscale();
     // Blur
     void meanBlur();
     void gaussianBlur3x3();
@@ -57,6 +59,7 @@ private slots:
     void horizontalGradientFilter();
     void verticalGradientFilter();
     void about();
+    //
 
 private:
     void createActions();

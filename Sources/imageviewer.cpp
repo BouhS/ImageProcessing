@@ -234,9 +234,23 @@ void ImageViewer::fitToWindow()
     updateActions();
 }
 
+void ImageViewer::grayscale()
+{
+    QImage* result =  imageProcessor->convertToGrayScale(image.constBits() ,image.width(), image.height(), image.format());
+    //QImage* result =  imageProcessor->convertToGrayScale(&image);
+    if(result != nullptr)
+    {
+        setImage(*result);
+        QMessageBox::warning(this, tr("Warning"),tr("Gray"));
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+    }
+}
 void ImageViewer::meanBlur()
 {
-   QImage* result =  imageProcessor->meanBlur(&image);
+   QImage* result =  imageProcessor->meanBlur(image.constBits(),image.width(),image.height(),image.format());
    if(result != nullptr)
    {
        setImage(*result);
@@ -250,21 +264,29 @@ void ImageViewer::meanBlur()
 
 void ImageViewer::gaussianBlur3x3()
 {
-   QImage* result =  imageProcessor->gaussianBlur3x3(&image);
-   if(result != nullptr)
-   {
-       setImage(*result);
-       QMessageBox::warning(this, tr("Warning"),tr("Blur applied"));
-   }
-   else
-   {
-       QMessageBox::warning(this, tr("Warning"),tr("No image found"));
-   }
+    if(&image != nullptr)
+    {
+       QImage* result =  imageProcessor->gaussianBlur3x3(image.constBits(),image.width(),image.height(),image.format());
+       if(result != nullptr)
+       {
+           setImage(*result);
+           QMessageBox::warning(this, tr("Warning"),tr("Blur applied"));
+       }
+       else
+       {
+           QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+       }
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+
+    }
 }
 
 void ImageViewer::gaussianBlur5x5()
 {
-   QImage* result =  imageProcessor->gaussianBlur5x5(&image);
+   QImage* result =  imageProcessor->gaussianBlur5x5(image.constBits(),image.width(),image.height(),image.format());
    if(result != nullptr)
    {
        setImage(*result);
@@ -336,7 +358,6 @@ void ImageViewer::showHistogram()
 
        int size = redHistogram.size();
        float imageSize = image.width()*image.height();
-       float total = 0;
        float maxValue = 0.f;
        for(int i=0; i<size;i++)
        {
@@ -348,11 +369,8 @@ void ImageViewer::showHistogram()
            set->append(value);
            if( maxValue < value)
                maxValue = value;
-           total += value;
            series->append(set);
        }
-
-      // qDebug() <<"total " <<total;
 
        QChart *chart = new QChart();
        chart->addSeries(series);
@@ -375,7 +393,6 @@ void ImageViewer::showHistogram()
        chartView->resize(800,500);
        chartView->show();
     }
- //  QMessageBox::warning(this, tr("Warning"),tr("Histogram applied"));
 
 }
 
@@ -435,7 +452,8 @@ void ImageViewer::drawBarChart()
 
 void ImageViewer::gradientFilter()
 {
- QImage* result = imageProcessor->gradientFilter(&image);
+ //QImage* result = imageProcessor->gradientFilter(&image);
+ QImage* result = imageProcessor->gradientFilter(image.constBits(),image.width(),image.height(),image.format());
  if(result != nullptr)
  {
      setImage(*result);
@@ -451,7 +469,8 @@ void ImageViewer::gradientFilter()
 
 void ImageViewer::horizontalGradientFilter()
 {
-    QImage* result = imageProcessor->horizontalSobelGradientFilter(&image);
+
+    QImage* result = imageProcessor->horizontalSobelGradientFilter(image.constBits(),image.width(),image.height(),image.format());
     if(result != nullptr)
     {
         setImage(*result);
@@ -466,7 +485,7 @@ void ImageViewer::horizontalGradientFilter()
 
 void ImageViewer::verticalGradientFilter()
 {
-    QImage* result = imageProcessor->verticalSobelGradientFilter(&image);
+    QImage* result = imageProcessor->verticalSobelGradientFilter(image.constBits(),image.width(),image.height(),image.format());
     if(result != nullptr)
     {
         setImage(*result);
@@ -553,12 +572,17 @@ void ImageViewer::createActions()
     filtersMenu->addAction(tr("&VariationFilter"), this, &ImageViewer::variationFilter);
 
     QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
+    imageMenu->addAction(tr("&GrayScale"), this, &ImageViewer::grayscale);
     imageMenu->addAction(tr("&Histogram"), this, &ImageViewer::showHistogram);
 
     QMenu *edgeDetectionMenu = menuBar()->addMenu(tr("&Edge Detection"));
     edgeDetectionMenu->addAction(tr("&Gradient"), this, &ImageViewer::gradientFilter);
     edgeDetectionMenu->addAction(tr("&HorizontalGradient"), this, &ImageViewer::horizontalGradientFilter);
     edgeDetectionMenu->addAction(tr("&VerticalGradient"), this, &ImageViewer::verticalGradientFilter);
+
+    QMenu *testMenu = menuBar()->addMenu(tr("&Test"));
+    //testMenu->addAction(tr("&MeanBlurTest"), this, &ImageViewer::meanBlurTest);
+
 
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
 
