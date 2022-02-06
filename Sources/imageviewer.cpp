@@ -264,23 +264,15 @@ void ImageViewer::meanBlur()
 
 void ImageViewer::gaussianBlur3x3()
 {
-    if(&image != nullptr)
+    QImage* result =  imageProcessor->gaussianBlur3x3(image.constBits(),image.width(),image.height(),image.format());
+    if(result != nullptr)
     {
-       QImage* result =  imageProcessor->gaussianBlur3x3(image.constBits(),image.width(),image.height(),image.format());
-       if(result != nullptr)
-       {
-           setImage(*result);
-           QMessageBox::warning(this, tr("Warning"),tr("Blur applied"));
-       }
-       else
-       {
-           QMessageBox::warning(this, tr("Warning"),tr("No image found"));
-       }
+        setImage(*result);
+        QMessageBox::warning(this, tr("Warning"),tr("Blur applied"));
     }
     else
     {
         QMessageBox::warning(this, tr("Warning"),tr("No image found"));
-
     }
 }
 
@@ -300,21 +292,21 @@ void ImageViewer::gaussianBlur5x5()
 
 void ImageViewer::medianFilter()
 {
-   QImage* result =  imageProcessor->medianFilter(&image);
-   if(result != nullptr)
-   {
-       setImage(*result);
-       QMessageBox::warning(this, tr("Warning"),tr("Blur applied"));
-   }
-   else
-   {
-       QMessageBox::warning(this, tr("Warning"),tr("No image found"));
-   }
+    QImage* result =  imageProcessor->medianFilter(image.constBits(),image.width(),image.height(),image.format());
+    if(result != nullptr)
+    {
+        setImage(*result);
+        QMessageBox::warning(this, tr("Warning"),tr("Blur applied"));
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+    }
 }
 
 void ImageViewer::variationFilter()
 {
-   QImage* result =  imageProcessor->variationFilter(&image);
+   QImage* result =  imageProcessor->variationFilter(image.constBits(),image.width(),image.height(),image.format());
    if(result != nullptr)
    {
        setImage(*result);
@@ -597,6 +589,7 @@ void ImageViewer::updateActions()
     zoomInAct->setEnabled(!fitToWindowAct->isChecked());
     zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
     normalSizeAct->setEnabled(!fitToWindowAct->isChecked());
+
 }
 
 void ImageViewer::scaleImage(double factor)

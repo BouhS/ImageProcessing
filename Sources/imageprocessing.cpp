@@ -72,124 +72,109 @@ QImage* ImageProcessing::gaussianBlur5x5(const  uchar* imageData,const int width
     return applyFilter(imageData, width, height, format, 2, kernel, 246.0f , &ImageProcessing::applyConvolution);
 }
 
-QImage* ImageProcessing::medianFilter(const QImage* image)
+QImage* ImageProcessing::medianFilter(const uchar* imageData, const int width, const int height, QImage::Format format)
 {
-    if(image !=nullptr)
+    QImage* filteredImage = new QImage(width,height, format);
+    uchar* filteredImageData = filteredImage->bits();
+    int kernelRadius = 1;
+
+    //list of neighborhood values
+    std::vector<int> medianList;
+    medianList.reserve(9);
+    for(int i=0; i<width; i++)
     {
-
-         QImage* filteredImage = new QImage(*image);
-         uchar* imageFilteredData = filteredImage->bits();
-         int kernelRadius = 1;
-
-         QColor color = QColor(0,0,0);
-         const int width = image->width();
-         const int height = image->height() ;
-
-         //list of neighborhood values
-         std::vector<int> medianList;
-         medianList.reserve(9);
-        for(int i=0; i<width; i++)
+        for(int j=0; j<height; j++)
         {
-            for(int j=0; j<height; j++)
+            medianList.clear();
+
+            for(int ki=-kernelRadius; ki<=kernelRadius; ki++)
             {
-                medianList.clear();
-                color = QColor(0,0,0);
-                for(int ki=-kernelRadius; ki<=kernelRadius; ki++)
+                int x = fmax(fmin(i+ki,width-1),0);
+                for(int kj=-kernelRadius; kj<=kernelRadius; kj++)
                 {
-                    int x = fmax(fmin(i+ki,width-1),0);
-                    for(int kj=-kernelRadius; kj<=kernelRadius; kj++)
-                    {
-                        int y = fmax(fmin(j+kj,height-1),0);
-                        QColor imageColor =  filteredImage->pixelColor(x,y);
-
-                        medianList.push_back(imageColor.red());
-
-                    }
+                    int y = fmax(fmin(j+kj,height-1),0);
+                    int index = 4*x+ y*width*4;
+                    medianList.push_back(imageData[index]);
                 }
-                std::sort(medianList.begin(),medianList.end());
-                int medianValue = medianList[medianList.size()/2 ];
-                color.setRed(medianValue);
-                color.setGreen(medianValue);
-                color.setBlue(medianValue);
-                filteredImage->setPixelColor(i, j,color);
             }
-
+            // Find the median value
+            std::sort(medianList.begin(),medianList.end());
+            int medianValue = medianList[medianList.size()/2 ];
+            int id = 4*i+ j*width*4;
+            filteredImageData[id] = medianValue;
+            filteredImageData[id+1] = medianValue;
+            filteredImageData[id+2] = medianValue;
+            filteredImageData[id+3] = 255.0f;
         }
-
-        return filteredImage;
-
     }
-    else
-    {
-        return nullptr;
-    }
-
+    return filteredImage;
 }
 
-QImage* ImageProcessing::variationFilter(const QImage* image)
+QImage* ImageProcessing::variationFilter(const uchar* imageData, const int width, const int height, QImage::Format format)
 {
-    if(image !=nullptr)
+
+    QImage* filteredImage = new QImage(width, height, format);
+    uchar* filteredImageData = filteredImage->bits();
+
+
+    int kernelRadius = 2;
+    int kernelSize = (kernelRadius*2+1)*(kernelRadius*2+1);
+
+    //list of neighborhood values
+    std::vector<float> neighborhoodValuesList;
+    neighborhoodValuesList.reserve(kernelSize);
+
+    for(int x=0; x<width; x++)
     {
-
-         QImage* filteredImage = new QImage(*image);
-         int kernelRadius = 2;
-
-         QColor color = QColor(0,0,0);
-         const int width = image->width();
-         const int height = image->height() ;
-
-         //list of neighborhood values
-         std::vector<float> kernel;
-         int kernelSize = (kernelRadius*2+1)*(kernelRadius*2+1);
-         kernel.reserve(kernelSize);
-
-        for(int i=0; i<width; i++)
+        for(int y=0; y<height; y++)
         {
-            for(int j=0; j<height; j++)
+            int id = 4*x+y*width*4;
+            QColor pixelColor = QColor(imageData[id],
+                                         imageData[id+1],
+                                         imageData[id+2]);
+
+            float finalWeight=0.0f;
+            //finalColor is a float because the image is supposed to be grey (r = g = b)
+            float finalColor =0;
+            neighborhoodValuesList.clear();
+
+            for(int i=-kernelRadius; i<=kernelRadius; i++)
             {
-                QColor imageColorij = image->pixelColor(i,j);
-                color = QColor(0,0,0);
-                float totalH=0.0f;
-                float colorF=0;
-                kernel.clear();
-                for(int ki=-kernelRadius; ki<=kernelRadius; ki++)
+                int xNeighbor = fmax(fmin(x+i, width-1), 0);
+
+                for(int j=-kernelRadius; j<=kernelRadius; j++)
                 {
-                    int x = fmax(fmin(i+ki,width-1),0);
-                    for(int kj=-kernelRadius; kj<=kernelRadius; kj++)
+                    int yNeighbor = fmax(fmin(y+j, height-1), 0);
+
+                    float weight = 5.0f;
+
+                    int index = 4*xNeighbor+ yNeighbor*width*4;
+                    QColor neighborColor = QColor(imageData[index],
+                                                 imageData[index+1],
+                                                 imageData[index+2]);
+
+                    if(pixelColor.red() != neighborColor.red())
                     {
-                        int y = fmax(fmin(j+kj,height-1),0);
-
-                        float h = 5.0f;
-                        QColor imageColorkl =  filteredImage->pixelColor(x,y);
-                        if(imageColorij.red() != imageColorkl.red())
-                        {
-                            h = abs(imageColorij.red() - imageColorkl.red());
-
-                        }
-                        kernel.push_back(1.0/h * imageColorkl.red());
-                        totalH += 1.0/h;
+                        weight = abs(pixelColor.red() - neighborColor.red());
                     }
+                    neighborhoodValuesList.push_back(1.0/weight * neighborColor.red());
+                    finalWeight += 1.0/weight;
                 }
-                for(int k=0; k<kernel.size(); k++)
-                {
-                    colorF = colorF + kernel[k] /(totalH);
-                }
-                color.setRed(colorF );
-                color.setGreen(colorF );
-                color.setBlue(colorF);
-                filteredImage->setPixelColor(i, j,color);
             }
 
+            for(int k=0; k<(int)neighborhoodValuesList.size(); k++)
+            {
+                finalColor = finalColor + neighborhoodValuesList[k] /(finalWeight);
+            }
+
+            filteredImageData[id] = finalColor;
+            filteredImageData[id+1] = finalColor;
+            filteredImageData[id+2] = finalColor;
+            filteredImageData[id+3] = 255.0f;
         }
-
-        return filteredImage;
-
-    }
-    else
-    {
-        return nullptr;
     }
 
+    return filteredImage;
 }
 
 void ImageProcessing::computeHistogram(const QImage* image,std::vector<int> *redHistogram,std::vector<int> *greenHistogram,std::vector<int> *blueHistogram)
