@@ -387,61 +387,6 @@ void ImageViewer::showHistogram()
     }
 
 }
-
-void ImageViewer::drawBarChart()
-{
-
-        //List of different BarSets . Each barset contains the number of pixels of that index value
-        vector<QBarSet *> barSetList(256);
-
-        QBarSeries *series = new QBarSeries();
-
-
-        for(int i=0; i<256;i++)
-        {
-            QBarSet *set = new QBarSet(""+i);
-            set->setColor(QColor(0,0,0));
-            set->append(i);
-            barSetList.push_back(set);
-            series->append(set);
-        }
-
-
-
-    //![3]
-        QChart *chart = new QChart();
-        chart->addSeries(series);
-        chart->setTitle("Simple barchart example");
-        chart->setAnimationOptions(QChart::SeriesAnimations);
-    //![3]
-
-    //![4]
-        QStringList categories;
-        categories << "Red" << "Green" << "Blue" ;
-        QBarCategoryAxis *axisX = new QBarCategoryAxis();
-        axisX->append(categories);
-        chart->addAxis(axisX, Qt::AlignBottom);
-        series->attachAxis(axisX);
-
-        QValueAxis *axisY = new QValueAxis();
-        axisY->setRange(0,15);
-        chart->addAxis(axisY, Qt::AlignLeft);
-        series->attachAxis(axisY);
-    //![4]
-
-    //![5]
-        chart->legend()->setVisible(false);
-        chart->legend()->setAlignment(Qt::AlignBottom);
-    //![5]
-
-    //![6]
-        QChartView *chartView = new QChartView(chart);
-        chartView->setRenderHint(QPainter::Antialiasing);
-    //![6]
-    //!
-    chartView->show();
-}
-
 void ImageViewer::gradientFilter()
 {
  //QImage* result = imageProcessor->gradientFilter(&image);
@@ -556,28 +501,26 @@ void ImageViewer::createActions()
     fitToWindowAct->setCheckable(true);
     fitToWindowAct->setShortcut(tr("Ctrl+F"));
 
-    QMenu *filtersMenu = menuBar()->addMenu(tr("&Filters"));
+    filtersMenu = menuBar()->addMenu(tr("&Filters"));
+    filtersMenu->setEnabled(false);
     filtersMenu->addAction(tr("&MeanBlur"), this, &ImageViewer::meanBlur);
     filtersMenu->addAction(tr("&GaussianBlur"), this, &ImageViewer::gaussianBlur3x3);
     filtersMenu->addAction(tr("&GaussianBlur5x5"), this, &ImageViewer::gaussianBlur5x5);
     filtersMenu->addAction(tr("&MedianFilter"), this, &ImageViewer::medianFilter);
     filtersMenu->addAction(tr("&VariationFilter"), this, &ImageViewer::variationFilter);
 
-    QMenu *imageMenu = menuBar()->addMenu(tr("&Image"));
+    imageMenu = menuBar()->addMenu(tr("&Image"));
+    imageMenu->setEnabled(false);
     imageMenu->addAction(tr("&GrayScale"), this, &ImageViewer::grayscale);
     imageMenu->addAction(tr("&Histogram"), this, &ImageViewer::showHistogram);
 
-    QMenu *edgeDetectionMenu = menuBar()->addMenu(tr("&Edge Detection"));
+    edgeDetectionMenu = menuBar()->addMenu(tr("&Edge Detection"));
+    edgeDetectionMenu->setEnabled(false);
     edgeDetectionMenu->addAction(tr("&Gradient"), this, &ImageViewer::gradientFilter);
     edgeDetectionMenu->addAction(tr("&HorizontalGradient"), this, &ImageViewer::horizontalGradientFilter);
     edgeDetectionMenu->addAction(tr("&VerticalGradient"), this, &ImageViewer::verticalGradientFilter);
 
-    QMenu *testMenu = menuBar()->addMenu(tr("&Test"));
-    //testMenu->addAction(tr("&MeanBlurTest"), this, &ImageViewer::meanBlurTest);
-
-
     QMenu *helpMenu = menuBar()->addMenu(tr("&Help"));
-
     helpMenu->addAction(tr("&About"), this, &ImageViewer::about);
     helpMenu->addAction(tr("About &Qt"), &QApplication::aboutQt);
 }
@@ -590,6 +533,9 @@ void ImageViewer::updateActions()
     zoomOutAct->setEnabled(!fitToWindowAct->isChecked());
     normalSizeAct->setEnabled(!fitToWindowAct->isChecked());
 
+    filtersMenu->setEnabled(!image.isNull());
+    imageMenu->setEnabled(!image.isNull());
+    edgeDetectionMenu->setEnabled(!image.isNull());
 }
 
 void ImageViewer::scaleImage(double factor)

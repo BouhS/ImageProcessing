@@ -32,7 +32,6 @@ class ImageViewer : public QMainWindow
 public:
     ImageViewer();
     bool loadFile(const QString &);
-    void drawBarChart();
 
 private slots:
     void open();
@@ -87,5 +86,8 @@ private:
     QAction *zoomOutAct;
     QAction *normalSizeAct;
     QAction *fitToWindowAct;
+    QMenu *filtersMenu;
+    QMenu *imageMenu;
+    QMenu *edgeDetectionMenu;
 };
 #endif // IMAGEVIEWER_H
