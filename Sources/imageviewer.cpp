@@ -320,72 +320,56 @@ void ImageViewer::variationFilter()
 
 void ImageViewer::showHistogram()
 {
-//drawBarChart();
-    if(image.isNull())
+    std::vector<int> greyHistogram;
+    greyHistogram.reserve(256);
+    std::vector<QBarSet*> barSets;
+    barSets.reserve(256);
+
+    QBarSeries *series = new QBarSeries();
+    for(int i=0; i < 256; i++)
     {
-        QMessageBox::warning(this, tr("Warning"),tr("No image !"));
-    }
-    else
-    {
-        std::vector<int> redHistogram;
-        redHistogram.reserve(256);
-        std::vector<int> greenHistogram;
-        greenHistogram.reserve(256);
-        std::vector<int> blueHistogram;
-        blueHistogram.reserve(256);
-        std::vector<QBarSet*> barSets;
-        barSets.reserve(256);
-
-        QBarSeries *series = new QBarSeries();
-
-        for(int i=0; i < 256; i++)
-        {
-            redHistogram.push_back(0);
-            greenHistogram.push_back(0);
-            blueHistogram.push_back(0);
-        }
-
-       imageProcessor->computeHistogram(&image,&redHistogram,&greenHistogram,&blueHistogram);
-
-
-       int size = redHistogram.size();
-       float imageSize = image.width()*image.height();
-       float maxValue = 0.f;
-       for(int i=0; i<size;i++)
-       {
-           QBarSet *set = new QBarSet(""+i);
-           set->setBrush(Qt::black);
-           set->setBorderColor(QColor(0,0,0));
-           set->setColor(QColor(0,0,0));
-           float value = redHistogram[i]/imageSize;
-           set->append(value);
-           if( maxValue < value)
-               maxValue = value;
-           series->append(set);
-       }
-
-       QChart *chart = new QChart();
-       chart->addSeries(series);
-       chart->setTitle("Histogram");
-
-       QStringList categories;
-       categories << "";
-
-       QValueAxis *axisY = new QValueAxis();
-       axisY->setRange(0,maxValue);
-       chart->addAxis(axisY, Qt::AlignLeft);
-       series->attachAxis(axisY);
-
-       chart->legend()->setVisible(false);
-       chart->legend()->setAlignment(Qt::AlignBottom);
-
-       QChartView *chartView = new QChartView(chart);
-
-      // chartView->setRenderHint(QPainter::Antialiasing);
-       chartView->resize(800,500);
-       chartView->show();
+        greyHistogram.push_back(0);
     }
 
+    imageProcessor->computeHistogram(&image,&greyHistogram);
+
+
+    int size = greyHistogram.size();
+    float imageSize = image.width()*image.height();
+    float maxValue = 0.f;
+    for(int i=0; i<size;i++)
+    {
+        QBarSet *set = new QBarSet(""+i);
+        set->setBrush(Qt::black);
+        set->setBorderColor(QColor(0,0,0));
+        set->setColor(QColor(0,0,0));
+        float value = greyHistogram[i]/imageSize;
+        set->append(value);
+        if( maxValue < value)
+            maxValue = value;
+        series->append(set);
+    }
+
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Histogram");
+
+    QStringList categories;
+    categories << "";
+
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setRange(0,maxValue);
+    chart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+    chart->legend()->setVisible(false);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    QChartView *chartView = new QChartView(chart);
+
+    // chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->resize(800,500);
+    chartView->show();
 }
 void ImageViewer::gradientFilter()
 {

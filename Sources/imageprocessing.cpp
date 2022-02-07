@@ -177,7 +177,7 @@ QImage* ImageProcessing::variationFilter(const uchar* imageData, const int width
     return filteredImage;
 }
 
-void ImageProcessing::computeHistogram(const QImage* image,std::vector<int> *redHistogram,std::vector<int> *greenHistogram,std::vector<int> *blueHistogram)
+void ImageProcessing::computeHistogram(const QImage* image,std::vector<int> *greyHistogram)
 {
     const int width = image->width();
     const int height = image->height();
@@ -187,7 +187,7 @@ void ImageProcessing::computeHistogram(const QImage* image,std::vector<int> *red
     vector< vector<int> *> *histogramVector = new vector< vector<int> *>(nbThreads);
     // Size of the section handled by one thread
     int  size = width/nbThreads +1;
-    int histoSize = redHistogram->size();
+    int histoSize = greyHistogram->size();
     for(int i=0; i< nbThreads; i++)
     {
 
@@ -216,7 +216,7 @@ void ImageProcessing::computeHistogram(const QImage* image,std::vector<int> *red
     {
         for(int j=0; j< histoSize; j++)
         {
-            (*redHistogram)[j] += histogramVector->at(i)->at(j);
+            (*greyHistogram)[j] += histogramVector->at(i)->at(j);
         }
 
     }
