@@ -177,61 +177,60 @@ QImage* ImageProcessing::variationFilter(const uchar* imageData, const int width
     return filteredImage;
 }
 
-void ImageProcessing::computeHistogram(const QImage* image,std::vector<int> *greyHistogram)
+void ImageProcessing::computeHistogram(const uchar* imageData, const int width, const int height,std::vector<int> *greyHistogram)
 {
-    const int width = image->width();
-    const int height = image->height();
 
     const int nbThreads = 4;
     vector<thread> threads;
-    vector< vector<int> *> *histogramVector = new vector< vector<int> *>(nbThreads);
-    // Size of the section handled by one thread
-    int  size = width/nbThreads +1;
-    int histoSize = greyHistogram->size();
-    for(int i=0; i< nbThreads; i++)
+
+    //histogramVector[threadId] = grayHistogram computed for the thread of id threadId
+    vector< vector<int> *> *grayHistograms = new vector< vector<int> *>(nbThreads);
+
+    int imageSize = width*height;
+    int sectionSize = width*height/nbThreads +1;
+    int sectionStart = 0;
+    int sectionEnd = 0;
+
+    for(int id = 0 ; id < nbThreads;  id++   )
     {
-
-        // Initialize vector that will be accessed by threads
-        histogramVector->at(i) = (new vector<int>(histoSize));
-        for(int j=0; j< histoSize; j++)
-        {
-            ((*histogramVector)[i])->at(j) = 0;
-        }
-
-        // Section the thread will handle
-        int x_start =  min(width,i*size);
-        int x_end = min(width,x_start +  size);
-
-        //Create thread
-        threads.push_back(thread(fillHistogram,*image,x_start,x_end,height,std::ref(histogramVector),i));
-
+        grayHistograms->at(id) = new vector<int>(256,0.0f);
+        sectionStart =  min(id *sectionSize, imageSize);
+        sectionEnd = min(sectionStart + sectionSize, imageSize);
+        threads.push_back(thread(fillHistogram,imageData,sectionStart,sectionEnd,std::ref(grayHistograms),id));
     }
 
-    // Join all threads
     for_each(threads.begin(),threads.end(),
         mem_fn(&thread::join));
 
     // Add all values computed by the threads to get the final value
     for(int i=0; i< nbThreads; i++)
     {
-        for(int j=0; j< histoSize; j++)
+        for(int j=0; j< 256; j++)
         {
-            (*greyHistogram)[j] += histogramVector->at(i)->at(j);
+            (*greyHistogram)[j] += grayHistograms->at(i)->at(j);
         }
 
     }
 }
 
-void ImageProcessing::fillHistogram(const QImage image,const int x_start,const int x_end, const int height, std::vector< std::vector<int> *> * histograms, const int i)
+void ImageProcessing::fillHistogram(const uchar* imageData, const int sectionStart,const int sectionEnd, std::vector< std::vector<int> *> * grayHistograms, const int threadId)
 {
-    for(int x=x_start; x<x_end; x++)
+    if(sectionStart < sectionEnd)
+    {
+        for(int i = sectionStart ; i < sectionEnd; i= i+1 )
         {
-        for(int y=0; y<height; y++)
-            {
-                QColor color = image.pixelColor(x,y);
-                histograms->at(i)->at(color.red()) += 1;
-            }
+             grayHistograms->at(threadId)->at(imageData[4*i]) +=1;
+        }
     }
+}
+
+void ImageProcessing::cumulativeHistogram(const uchar* imageData, const int width, const int height,std::vector<int> *greyHistogram)
+{
+   computeHistogram(imageData, width,height, greyHistogram);
+   for(int i = 0 ; i < 256; i++ )
+   {
+      (* greyHistogram)[i] +=  (i-1)>= 0 ? greyHistogram->at(i-1) : 0 ;
+   }
 }
 
 QImage* ImageProcessing::gradientFilter(const  uchar* imageData,const int width, const int height,const QImage::Format format)
@@ -306,7 +305,6 @@ QImage* ImageProcessing::gradientFilter(const  uchar* imageData,const int width,
     return imageFiltered;
 
 }
-
 
 QImage* ImageProcessing::horizontalSobelGradientFilter(const  uchar* imageData,const int width, const int height,const QImage::Format format)
 {

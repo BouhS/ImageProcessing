@@ -331,7 +331,7 @@ void ImageViewer::showHistogram()
         greyHistogram.push_back(0);
     }
 
-    imageProcessor->computeHistogram(&image,&greyHistogram);
+    imageProcessor->computeHistogram(image.constBits(),image.width(),image.height(),&greyHistogram);
 
 
     int size = greyHistogram.size();
@@ -371,6 +371,61 @@ void ImageViewer::showHistogram()
     chartView->resize(800,500);
     chartView->show();
 }
+
+void ImageViewer::showCumulativeHistogram()
+{
+    std::vector<int> greyHistogram;
+    greyHistogram.reserve(256);
+    std::vector<QBarSet*> barSets;
+    barSets.reserve(256);
+
+    QBarSeries *series = new QBarSeries();
+    for(int i=0; i < 256; i++)
+    {
+        greyHistogram.push_back(0);
+    }
+
+    imageProcessor->cumulativeHistogram(image.constBits(),image.width(),image.height(),&greyHistogram);
+
+
+    int size = greyHistogram.size();
+    float imageSize = image.width()*image.height();
+    float maxValue = 0.f;
+    for(int i=0; i<size;i++)
+    {
+        QBarSet *set = new QBarSet(""+i);
+        set->setBrush(Qt::black);
+        set->setBorderColor(QColor(0,0,0));
+        set->setColor(QColor(0,0,0));
+        float value = greyHistogram[i]/imageSize;
+        set->append(value);
+        if( maxValue < value)
+            maxValue = value;
+        series->append(set);
+    }
+
+    QChart *chart = new QChart();
+    chart->addSeries(series);
+    chart->setTitle("Histogram");
+
+    QStringList categories;
+    categories << "";
+
+    QValueAxis *axisY = new QValueAxis();
+    axisY->setRange(0,maxValue);
+    chart->addAxis(axisY, Qt::AlignLeft);
+    series->attachAxis(axisY);
+
+    chart->legend()->setVisible(false);
+    chart->legend()->setAlignment(Qt::AlignBottom);
+
+    QChartView *chartView = new QChartView(chart);
+
+    // chartView->setRenderHint(QPainter::Antialiasing);
+    chartView->resize(800,500);
+    chartView->show();
+}
+
 void ImageViewer::gradientFilter()
 {
  //QImage* result = imageProcessor->gradientFilter(&image);
@@ -497,6 +552,7 @@ void ImageViewer::createActions()
     imageMenu->setEnabled(false);
     imageMenu->addAction(tr("&GrayScale"), this, &ImageViewer::grayscale);
     imageMenu->addAction(tr("&Histogram"), this, &ImageViewer::showHistogram);
+    imageMenu->addAction(tr("&Cumulative histogram"), this, &ImageViewer::showCumulativeHistogram);
 
     edgeDetectionMenu = menuBar()->addMenu(tr("&Edge Detection"));
     edgeDetectionMenu->setEnabled(false);

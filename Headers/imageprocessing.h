@@ -15,7 +15,15 @@
 #include <string>
 
 using namespace std;
-
+/*
+typedef struct HistogramValues
+{
+    int histo;
+    int mean;
+    int max;
+    int min;
+} histogramValues;
+*/
 class ImageProcessing
 {
 
@@ -38,9 +46,10 @@ public:
     // variation of intensity to maintain edges visible
     QImage* variationFilter(const uchar* imageData, const int width, const int height, QImage::Format format);
     // Histogram
-    void computeHistogram(const QImage* image,std::vector<int> *greyHistogram);
-    static void fillHistogram(const QImage image,const int x_start,const int x_end, const int height, vector< vector<int> *> * histograms, const int i);
+    void computeHistogram(const uchar* imageData, const int width, const int height, std::vector<int> *grayHistogram);
+    static void fillHistogram(const uchar* imageData, const int sectionStart,const int sectionEnd, std::vector< std::vector<int> *> * grayHistograms, const int threadId);
 
+    void cumulativeHistogram(const uchar* imageData, const int width, const int height,std::vector<int> *grayHistogram);
     //Edge detection
     QImage* gradientFilter(const  uchar* imageData,const int width, const int height,const QImage::Format format);
     QImage* horizontalSobelGradientFilter(const  uchar* imageData, const int width, const int height, const QImage::Format format);
