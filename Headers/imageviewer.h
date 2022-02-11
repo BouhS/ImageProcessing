@@ -55,6 +55,7 @@ private slots:
     void showHistogram();
     void showCumulativeHistogram();
     // Edge detection
+    void gradientThreshold();
     void gradientFilter();
     void horizontalGradientFilter();
     void verticalGradientFilter();

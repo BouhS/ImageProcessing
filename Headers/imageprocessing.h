@@ -46,11 +46,12 @@ public:
     // variation of intensity to maintain edges visible
     QImage* variationFilter(const uchar* imageData, const int width, const int height, QImage::Format format);
     // Histogram
-    void computeHistogram(const uchar* imageData, const int width, const int height, std::vector<int> *grayHistogram);
-    static void fillHistogram(const uchar* imageData, const int sectionStart,const int sectionEnd, std::vector< std::vector<int> *> * grayHistograms, const int threadId);
+    void computeHistogram(const uchar* imageData, const int width, const int height, std::vector<float> *grayHistogram);
+    static void fillHistogram(const uchar* imageData, const int sectionStart,const int sectionEnd, std::vector< std::vector<float> *> * grayHistograms, const int threadId);
 
-    void cumulativeHistogram(const uchar* imageData, const int width, const int height,std::vector<int> *grayHistogram);
+    void cumulativeHistogram(const uchar* imageData, const int width, const int height,std::vector<float> *grayHistogram);
     //Edge detection
+    QImage* gradientThreshold(const  uchar* imageData,const int width, const int height,const QImage::Format format);
     QImage* gradientFilter(const  uchar* imageData,const int width, const int height,const QImage::Format format);
     QImage* horizontalSobelGradientFilter(const  uchar* imageData, const int width, const int height, const QImage::Format format);
     QImage* verticalSobelGradientFilter(const  uchar* imageData, const int width, const int height, const QImage::Format format);

@@ -177,14 +177,14 @@ QImage* ImageProcessing::variationFilter(const uchar* imageData, const int width
     return filteredImage;
 }
 
-void ImageProcessing::computeHistogram(const uchar* imageData, const int width, const int height,std::vector<int> *greyHistogram)
+void ImageProcessing::computeHistogram(const uchar* imageData, const int width, const int height,std::vector<float> *greyHistogram)
 {
 
     const int nbThreads = 4;
     vector<thread> threads;
 
     //histogramVector[threadId] = grayHistogram computed for the thread of id threadId
-    vector< vector<int> *> *grayHistograms = new vector< vector<int> *>(nbThreads);
+    vector< vector<float> *> *grayHistograms = new vector< vector<float> *>(nbThreads);
 
     int imageSize = width*height;
     int sectionSize = width*height/nbThreads +1;
@@ -193,7 +193,7 @@ void ImageProcessing::computeHistogram(const uchar* imageData, const int width, 
 
     for(int id = 0 ; id < nbThreads;  id++   )
     {
-        grayHistograms->at(id) = new vector<int>(256,0.0f);
+        grayHistograms->at(id) = new vector<float>(256,0.0f);
         sectionStart =  min(id *sectionSize, imageSize);
         sectionEnd = min(sectionStart + sectionSize, imageSize);
         threads.push_back(thread(fillHistogram,imageData,sectionStart,sectionEnd,std::ref(grayHistograms),id));
@@ -211,9 +211,10 @@ void ImageProcessing::computeHistogram(const uchar* imageData, const int width, 
         }
 
     }
+
 }
 
-void ImageProcessing::fillHistogram(const uchar* imageData, const int sectionStart,const int sectionEnd, std::vector< std::vector<int> *> * grayHistograms, const int threadId)
+void ImageProcessing::fillHistogram(const uchar* imageData, const int sectionStart,const int sectionEnd, std::vector< std::vector<float> *> * grayHistograms, const int threadId)
 {
     if(sectionStart < sectionEnd)
     {
@@ -224,13 +225,54 @@ void ImageProcessing::fillHistogram(const uchar* imageData, const int sectionSta
     }
 }
 
-void ImageProcessing::cumulativeHistogram(const uchar* imageData, const int width, const int height,std::vector<int> *greyHistogram)
+void ImageProcessing::cumulativeHistogram(const uchar* imageData, const int width, const int height,std::vector<float> *greyHistogram)
 {
    computeHistogram(imageData, width,height, greyHistogram);
    for(int i = 0 ; i < 256; i++ )
    {
       (* greyHistogram)[i] +=  (i-1)>= 0 ? greyHistogram->at(i-1) : 0 ;
    }
+}
+
+QImage* ImageProcessing::gradientThreshold(const  uchar* imageData,const int width, const int height,const QImage::Format format)
+{
+    QImage* filteredImage = gradientFilter(imageData,width,height,format);
+    vector<float> *greyHistogram = new vector<float>(256,0.0f);
+    cumulativeHistogram(filteredImage->constBits(),filteredImage->width(),filteredImage->height(),greyHistogram);
+    int i=0;
+    float percentageOfPixels = 0.95f;
+    while(i<256 && greyHistogram->at(i)/(width*height) < percentageOfPixels )
+    {
+        i++;
+    }
+    int threshold = i;
+    uchar* filteredImageData = filteredImage->bits();
+    for(int i=0; i<width*height *4; i = i+4)
+    {
+        if(filteredImageData[i] < threshold)
+        {
+            //red
+            filteredImageData[i]= 0;
+            //green
+            filteredImageData[i+1]= 0;
+            //blue
+            filteredImageData[i+2]= 0;
+            //alpha
+            filteredImageData[i+3]= 255;
+        }
+        else
+        {
+            //red
+            filteredImageData[i]= 255;
+            //green
+            filteredImageData[i+1]= 255;
+            //blue
+            filteredImageData[i+2]= 255;
+            //alpha
+            filteredImageData[i+3]= 255;
+        }
+    }
+    return filteredImage;
 }
 
 QImage* ImageProcessing::gradientFilter(const  uchar* imageData,const int width, const int height,const QImage::Format format)
@@ -303,7 +345,6 @@ QImage* ImageProcessing::gradientFilter(const  uchar* imageData,const int width,
         }
     }
     return imageFiltered;
-
 }
 
 QImage* ImageProcessing::horizontalSobelGradientFilter(const  uchar* imageData,const int width, const int height,const QImage::Format format)

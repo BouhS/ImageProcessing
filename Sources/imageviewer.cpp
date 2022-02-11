@@ -320,19 +320,10 @@ void ImageViewer::variationFilter()
 
 void ImageViewer::showHistogram()
 {
-    std::vector<int> greyHistogram;
-    greyHistogram.reserve(256);
-    std::vector<QBarSet*> barSets;
-    barSets.reserve(256);
-
+    std::vector<float> greyHistogram(256,0.0f);
     QBarSeries *series = new QBarSeries();
-    for(int i=0; i < 256; i++)
-    {
-        greyHistogram.push_back(0);
-    }
 
     imageProcessor->computeHistogram(image.constBits(),image.width(),image.height(),&greyHistogram);
-
 
     int size = greyHistogram.size();
     float imageSize = image.width()*image.height();
@@ -374,19 +365,10 @@ void ImageViewer::showHistogram()
 
 void ImageViewer::showCumulativeHistogram()
 {
-    std::vector<int> greyHistogram;
-    greyHistogram.reserve(256);
-    std::vector<QBarSet*> barSets;
-    barSets.reserve(256);
-
+    std::vector<float> greyHistogram(256,0.0f);
     QBarSeries *series = new QBarSeries();
-    for(int i=0; i < 256; i++)
-    {
-        greyHistogram.push_back(0);
-    }
 
     imageProcessor->cumulativeHistogram(image.constBits(),image.width(),image.height(),&greyHistogram);
-
 
     int size = greyHistogram.size();
     float imageSize = image.width()*image.height();
@@ -426,10 +408,9 @@ void ImageViewer::showCumulativeHistogram()
     chartView->show();
 }
 
-void ImageViewer::gradientFilter()
+void ImageViewer::gradientThreshold()
 {
- //QImage* result = imageProcessor->gradientFilter(&image);
- QImage* result = imageProcessor->gradientFilter(image.constBits(),image.width(),image.height(),image.format());
+ QImage* result = imageProcessor->gradientThreshold(image.constBits(),image.width(),image.height(),image.format());
  if(result != nullptr)
  {
      setImage(*result);
@@ -442,6 +423,20 @@ void ImageViewer::gradientFilter()
 
 }
 
+void ImageViewer::gradientFilter()
+{
+ QImage* result = imageProcessor->gradientFilter(image.constBits(),image.width(),image.height(),image.format());
+ if(result != nullptr)
+ {
+     setImage(*result);
+     QMessageBox::warning(this, tr("Warning"),tr("Filter applied"));
+ }
+ else
+ {
+     QMessageBox::warning(this, tr("Warning"),tr("No image found"));
+ }
+
+}
 
 void ImageViewer::horizontalGradientFilter()
 {
@@ -556,6 +551,7 @@ void ImageViewer::createActions()
 
     edgeDetectionMenu = menuBar()->addMenu(tr("&Edge Detection"));
     edgeDetectionMenu->setEnabled(false);
+    edgeDetectionMenu->addAction(tr("&Gradient by threshold"), this, &ImageViewer::gradientThreshold);
     edgeDetectionMenu->addAction(tr("&Gradient"), this, &ImageViewer::gradientFilter);
     edgeDetectionMenu->addAction(tr("&HorizontalGradient"), this, &ImageViewer::horizontalGradientFilter);
     edgeDetectionMenu->addAction(tr("&VerticalGradient"), this, &ImageViewer::verticalGradientFilter);
